@@ -51,6 +51,7 @@ async fn handle_msg(api: &Api, msg: Message) -> Result<(), Error> {
 	};
 
 	let user_id = user.id.to_string();
+	info!("Handling message from {}", user_id);
 	let user_token = query!(
 		"SELECT u.user_token FROM poll_user u INNER JOIN tg_user t ON t.poll_user = u.id WHERE t.user_id = $1;",
 		&user_id
@@ -60,6 +61,7 @@ async fn handle_msg(api: &Api, msg: Message) -> Result<(), Error> {
 	let user_token = match user_token {
 		Some(record) => record.user_token,
 		None => {
+			info!("Creating new token for {}", user_id);
 			let mut mac = Hmac::<Sha256>::new_varkey(SECRET.as_bytes())?;
 			mac.update(user_id.as_bytes());
 			let user_token = base64::encode_config(mac.finalize().into_bytes(), base64::URL_SAFE_NO_PAD);
