@@ -18,14 +18,21 @@ USER postgres
 RUN initdb --pgdata "$PWD"
 USER root
 
-# copy source code
-RUN mkdir -p /src
+# copy cargo files
+RUN mkdir -p /src/src
 WORKDIR /src
 COPY Cargo.lock Cargo.toml ./
+
+# pre-compile dependencies
+RUN echo 'fn main() {}' >src/main.rs \
+	&& cargo build --release \
+	&& rm -r src/
+
+# copy source files
 COPY src/ src/
 COPY migrations/ migrations/
 
-# compile source code
+# compile source code with database schema
 ENV DATABASE_URL=postgres://postgres:postgres@localhost/pollus
 RUN su postgres -c 'pg_ctl start --silent -w --pgdata=/var/lib/postgres/data -o "--data-directory=/var/lib/postgres/data"' \
 	&& createdb -U postgres -E UTF-8 pollus \
