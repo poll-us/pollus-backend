@@ -179,6 +179,7 @@ dependencies = [
  "libc",
  "num-integer",
  "num-traits",
+ "serde",
  "time 0.1.44",
  "winapi 0.3.9",
 ]
@@ -572,6 +573,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c7739653e3443861fa24de5958acb9dbed32aaef6aed853aa1b6a247825093b"
 dependencies = [
+ "chrono",
  "futures-core",
  "futures-util",
  "gotham",
@@ -1209,13 +1211,16 @@ checksum = "3831453b3449ceb48b6d9c7ad7c96d5ea673e9b470a1dc578c2ce6521230884c"
 name = "pollus-backend"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "dotenv",
  "gotham",
  "gotham_restful",
+ "itertools",
  "lazy_static",
  "log",
  "pretty_env_logger",
  "refinery",
+ "serde",
  "sqlx",
 ]
 
@@ -1784,6 +1789,7 @@ dependencies = [
  "bitflags",
  "byteorder",
  "bytes",
+ "chrono",
  "crossbeam-channel",
  "crossbeam-queue",
  "crossbeam-utils",
