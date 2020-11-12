@@ -5,12 +5,27 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      
       - uses: actions/checkout@v2
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo install refinery_cli --features postgresql --no-default-features
+      
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      
+      - uses: actions-rs/install@v0.1.2
+        with:
+          crate: refinery_cli
+          use-tool-cache: true
+      
       - run: refinery migrate -e DATABASE_URL files && cargo test
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost/pollus
+    
     services:
       postgres:
         image: postgres:alpine
