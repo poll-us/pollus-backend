@@ -1,0 +1,18 @@
+# -*- (eval: cargo-minor-mode 1) -*-
+
+[package]
+name = "pollus-backend"
+version = "0.1.0"
+authors = ["Dominic <git@msrd0.de>"]
+edition = "2018"
+license = "Apache-2.0"
+
+[dependencies]
+dotenv = "0.15"
+gotham = { version = "0.5", default-features = false }
+gotham_restful = { version = "0.1" }
+lazy_static = "1.4"
+log = "0.4"
+pretty_env_logger = "0.4"
+refinery = { version = "0.4", features = ["postgres"] }
+sqlx = { version = "0.4.0-beta.1", features = ["runtime-tokio", "postgres", "macros"], default-features = false }

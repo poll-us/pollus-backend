@@ -1,0 +1,32 @@
+name: Rust
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo install refinery_cli --features postgresql --no-default-features
+      - run: refinery migrate -e DATABASE_URL files && cargo test
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost/pollus
+    services:
+      postgres:
+        image: postgres:alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pollus
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready
+  
+  rustfmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+      - run: cargo fmt -- --check
