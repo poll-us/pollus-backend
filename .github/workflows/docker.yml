@@ -18,6 +18,9 @@ jobs:
           IMAGE=$IMAGE_ID:latest
           CACHE=$IMAGE_ID:cache
           
+          docker pull $CACHE
+          docker pull $IMAGE
+          
           docker build . \
             --target builder \
             --cache-from $CACHE \
