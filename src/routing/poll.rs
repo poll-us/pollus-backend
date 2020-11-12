@@ -1,6 +1,5 @@
 use crate::POOL;
 use chrono::{Duration, NaiveDate, NaiveTime};
-use gotham_restful::Success;
 use itertools::Itertools;
 use serde::Serialize;
 use sqlx::query;

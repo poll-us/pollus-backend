@@ -1,17 +1,8 @@
 use gotham::{
-	handler::HandlerError,
-	helpers::http::response::create_empty_response,
-	hyper::{
-		header::{CONTENT_TYPE, LOCATION},
-		Body, Response, StatusCode
-	},
-	middleware::{
-		logger::RequestLogger,
-		session::{NewSessionMiddleware, SessionData}
-	},
+	hyper::header::CONTENT_TYPE,
+	middleware::logger::RequestLogger,
 	pipeline::{new_pipeline, single::single_pipeline},
-	router::{builder::*, Router},
-	state::{FromState, State}
+	router::{builder::*, Router}
 };
 use gotham_restful::{CorsConfig, DrawResources, Origin};
 use log::Level;
