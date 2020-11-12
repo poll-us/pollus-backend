@@ -46,6 +46,10 @@ RUN su postgres -c 'pg_ctl start --silent -w --pgdata=/var/lib/postgres/data -o 
 ################
 FROM alpine:edge
 
+LABEL org.opencontainers.image.source https://github.com/poll-us/pollus-backend
+# this list should cover all dependencies, run `cargo lichking list` to see all licenses
+LABEL org.opencontainers.image.licenses Apache-2.0 AND ISC AND MIT AND MPL-2.0
+
 RUN apk add --no-cache libgcc \
 	&& mkdir -p /usr/local/bin
 
