@@ -19,6 +19,7 @@ lazy_static! {
 	static ref POOL: PgPool =
 		PgPool::connect_lazy(&env::var("DATABASE_URL").expect("DATABASE_URL must point to a postgres database"))
 			.expect("Failed to connect to database");
+	static ref SECRET: String = env::var("SECRET").expect("SECRET must be set to a server secret");
 }
 
 fn main() {

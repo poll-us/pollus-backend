@@ -1,4 +1,9 @@
+use crate::{POOL, SECRET};
 use futures_util::StreamExt;
+use gotham::anyhow::Error;
+use hmac::{Hmac, Mac, NewMac};
+use sha2::Sha256;
+use sqlx::query;
 use std::env;
 use telegram_bot::*;
 use tokio::runtime::Runtime;
@@ -40,17 +45,55 @@ async fn handle_msg(api: &Api, msg: Message) -> Result<(), Error> {
 	let text = match &msg.kind {
 		MessageKind::Text { data, .. } => data,
 		_ => {
-			return api
-				.send(msg.text_reply("Sorry, this bot only reads text messages."))
-				.await
-				.map(|_| ())
-		},
+			api.send(msg.text_reply("Sorry, this bot only reads text messages.")).await?;
+			return Ok(());
+		}
 	};
 
-	let user_token = "THISTOKENISNONSENSE";
+	let user_id = user.id.to_string();
+	let user_token = query!(
+		"SELECT u.user_token FROM poll_user u INNER JOIN tg_user t ON t.poll_user = u.id WHERE t.user_id = $1;",
+		&user_id
+	)
+	.fetch_optional(&*POOL)
+	.await?;
+	let user_token = match user_token {
+		Some(record) => record.user_token,
+		None => {
+			let mut mac = Hmac::<Sha256>::new_varkey(SECRET.as_bytes())?;
+			mac.update(user_id.as_bytes());
+			let user_token = base64::encode_config(mac.finalize().into_bytes(), base64::URL_SAFE_NO_PAD);
+
+			let id = query!(
+				"INSERT INTO poll_user (firstname, lastname, user_token) VALUES ($1, $2, $3) RETURNING id;",
+				user.first_name,
+				user.last_name,
+				user_token
+			)
+			.fetch_one(&*POOL)
+			.await?
+			.id;
+			query!(
+				"INSERT INTO tg_user (user_id, username, poll_user) VALUES ($1, $2, $3);",
+				user_id,
+				user.username,
+				id
+			)
+			.execute(&*POOL)
+			.await?;
+
+			user_token
+		}
+	};
 
 	if text.starts_with("/start") {
-		api.send(SendMessage::new(user, format!("Welcome to the Pollus Bot! I'm here to give you access to our great Pollus Polls! Your personal link is https://pollus.msrd0.de/auth/{token}. If you forget your link, just type '/link' and I'll send it to again!", token = user_token))).await?;
+		api.send(SendMessage::new(
+			user,
+			format!(
+				"Welcome to the Pollus Bot! I'm here to give you access to our great Pollus Polls! Your personal link is https://pollus.msrd0.de/auth/{token}. If you forget your link, just type '/link' and I'll send it to again!",
+				token = user_token
+			)
+		)).await?;
 	} else if text.starts_with("/link") {
 		api.send(SendMessage::new(
 			user,
