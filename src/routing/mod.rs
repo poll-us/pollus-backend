@@ -17,6 +17,7 @@ use gotham_restful::{CorsConfig, DrawResources, Origin};
 use log::Level;
 
 mod poll;
+mod submission;
 
 pub(crate) fn router() -> Router {
 	let logger_middleware = RequestLogger::new(Level::Info);
@@ -30,5 +31,6 @@ pub(crate) fn router() -> Router {
 	let (chain, pipelines) = single_pipeline(new_pipeline().add(logger_middleware).add(cors).build());
 	build_router(chain, pipelines, |route| {
 		route.resource::<poll::PollResource>("/poll");
+		route.resource::<submission::SubmissionResource>("/submission");
 	})
 }

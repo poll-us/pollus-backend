@@ -27,7 +27,7 @@ struct PollData {
 #[derive(Serialize)]
 struct PollSubmission {
 	id: i64,
-	values: Vec<i8>
+	values: Vec<i16>
 }
 
 #[derive(Serialize)]
