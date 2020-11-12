@@ -19,7 +19,10 @@ pub(super) fn start() {
 		while let Some(update) = stream.next().await {
 			let update = update?;
 			match update.kind {
-				UpdateKind::Message(msg) => handle_msg(&api, msg).await?,
+				UpdateKind::Message(msg) => match handle_msg(&api, &msg).await {
+					Ok(_) => {},
+					Err(err) => error!("Unable to handle msg {:?}: {}", msg, err)
+				},
 				other => warn!("Ignoring unknown update: {:?}", other)
 			};
 		}
@@ -31,7 +34,7 @@ pub(super) fn start() {
 	}
 }
 
-async fn handle_msg(api: &Api, msg: Message) -> Result<(), Error> {
+async fn handle_msg(api: &Api, msg: &Message) -> Result<(), Error> {
 	let user = match &msg.chat {
 		MessageChat::Private(user) => user,
 		MessageChat::Group(group) => return leave_group(api, &group).await,
