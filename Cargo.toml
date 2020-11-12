@@ -1,4 +1,4 @@
-# -*- (eval: cargo-minor-mode 1) -*-
+# -*- eval: (cargo-minor-mode 1) -*-
 
 [package]
 name = "pollus-backend"
@@ -10,6 +10,7 @@ license = "Apache-2.0"
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
 dotenv = "0.15"
+futures-util = "0.3.8"
 gotham = { version = "0.5", default-features = false }
 gotham_restful = { version = "0.1", features = ["chrono"] }
 itertools = "0.9"
@@ -19,3 +20,5 @@ pretty_env_logger = "0.4"
 refinery = { version = "0.4", features = ["postgres"] }
 serde = { version = "1.0", features = ["derive"] }
 sqlx = { version = "0.4.0-beta.1", features = ["runtime-tokio", "postgres", "macros", "chrono"], default-features = false }
+telegram-bot = "0.7"
+tokio = { version = "0.2", features = ["rt-core"] }

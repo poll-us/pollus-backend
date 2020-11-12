@@ -6,8 +6,9 @@ extern crate log;
 extern crate gotham_restful;
 
 use sqlx::PgPool;
-use std::env;
+use std::{env, thread};
 
+mod bot;
 mod routing;
 
 mod embedded {
@@ -31,6 +32,8 @@ fn main() {
 	embedded::migrations::runner()
 		.run(&mut db_conf)
 		.expect("Failed to run migrations");
+
+	thread::spawn(bot::start);
 
 	let router = routing::router();
 	let addr = "[::]:7181";
