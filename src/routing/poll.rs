@@ -19,20 +19,23 @@ struct PollConfig {
 #[derive(Serialize)]
 struct PollData {
 	id: i64,
-	name: String,
+	firstname: String,
+	lastname: Option<String>,
 	submissions: Vec<PollSubmission>
 }
 
 #[derive(Serialize)]
 struct PollSubmission {
 	id: i64,
-	values: Vec<i16>
+	time: NaiveTime,
+	value: i16
 }
 
 #[derive(Serialize)]
 struct Poll {
 	id: String,
-	cfg: Vec<PollConfig>
+	cfg: Vec<PollConfig>,
+	data: Vec<PollData>
 }
 
 #[read(PollResource)]
@@ -71,5 +74,37 @@ async fn read(id: String) -> Result<Poll, sqlx::Error> {
 		}
 	}
 
-	Ok(Poll { id, cfg })
+	// pull the data for those configs
+	let cfg_ids = cfg.iter().map(|cfg| cfg.id).collect::<Vec<i64>>();
+	let data = query!(
+		"SELECT u.id, u.firstname, u.lastname, t.submission, t.value, t.time FROM poll_submission_time t INNER JOIN poll_submission s ON t.submission = s.id INNER JOIN poll_user u ON s.user = u.id WHERE t.value IS NOT NULL AND s.cfg = ANY($1);",
+		&cfg_ids
+	).fetch_all(&*POOL).await?;
+	let data = data
+		.into_iter()
+		.map(|record| {
+			(
+				(record.id, record.firstname, record.lastname),
+				(record.submission, record.value, record.time)
+			)
+		})
+		.into_group_map()
+		.into_iter()
+		.map(|((id, firstname, lastname), submissions)| PollData {
+			id,
+			firstname,
+			lastname,
+			submissions: submissions
+				.into_iter()
+				.map(|(id, value, time)| PollSubmission {
+					id,
+					// the database query guarantees that this is never null
+					value: value.unwrap(),
+					time
+				})
+				.collect()
+		})
+		.collect();
+
+	Ok(Poll { id, cfg, data })
 }

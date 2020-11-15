@@ -5,7 +5,9 @@ extern crate log;
 #[macro_use]
 extern crate gotham_restful;
 
-use sqlx::PgPool;
+use gotham::anyhow::Error;
+use log::LevelFilter;
+use sqlx::{postgres::PgConnectOptions, ConnectOptions, PgPool};
 use std::{env, thread};
 
 mod bot;
@@ -16,9 +18,16 @@ mod embedded {
 }
 
 lazy_static! {
-	static ref POOL: PgPool =
-		PgPool::connect_lazy(&env::var("DATABASE_URL").expect("DATABASE_URL must point to a postgres database"))
-			.expect("Failed to connect to database");
+	static ref POOL: PgPool = PgPool::connect_lazy_with(
+		env::var("DATABASE_URL")
+			.map_err(Error::from)
+			.and_then(|url| url.parse().map_err(Error::from))
+			.map(|mut options: PgConnectOptions| {
+				options.log_statements(LevelFilter::Debug);
+				options
+			})
+			.expect("DATABASE_URL must point to a postgres database")
+	);
 	static ref SECRET: String = env::var("SECRET").expect("SECRET must be set to a server secret");
 }
 
