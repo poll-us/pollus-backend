@@ -56,5 +56,6 @@ RUN apk add --no-cache libgcc \
 COPY --from=builder /src/bins /usr/local/bin/
 
 EXPOSE 7181
+ENV RUST_LOG=info
 CMD ["/usr/local/bin/pollus-backend"]
 
