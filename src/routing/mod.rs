@@ -9,6 +9,7 @@ use log::Level;
 
 mod auth;
 mod poll;
+mod profile;
 mod submission;
 
 pub(crate) fn router() -> Router {
@@ -30,6 +31,7 @@ pub(crate) fn router() -> Router {
 			.to_async_borrowing(auth::handle_auth);
 
 		route.resource::<poll::PollResource>("/poll");
+		route.resource::<profile::ProfileResource>("/profile");
 		route.resource::<submission::SubmissionResource>("/submission");
 	})
 }
