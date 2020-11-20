@@ -607,8 +607,7 @@ dependencies = [
 [[package]]
 name = "gotham_restful_derive"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33212f219290470987729beb8b6d67c997c9c926ebbc824809730ed0507dc51e"
+source = "git+https://gitlab.com/msrd0/gotham-restful?rev=ce570c4787c6746b7b61d7d27e9c907ecbd5bf0d#ce570c4787c6746b7b61d7d27e9c907ecbd5bf0d"
 dependencies = [
  "heck",
  "proc-macro2",

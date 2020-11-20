@@ -1,4 +1,8 @@
 use crate::POOL;
+use gotham::{
+	middleware::session::SessionData,
+	state::{FromState, State}
+};
 use gotham_restful::NoContent;
 use serde::Deserialize;
 use sqlx::query;
@@ -9,17 +13,15 @@ pub(super) struct SubmissionResource;
 
 #[derive(Deserialize)]
 struct NewSubmission {
-	user_token: String,
 	poll_cfg: i64,
 	values: Vec<i16>
 }
 
 #[create(SubmissionResource)]
-async fn create(body: NewSubmission) -> Result<NoContent, sqlx::Error> {
+async fn create(state: &mut State, body: NewSubmission) -> Result<NoContent, sqlx::Error> {
+	let user_id: &i64 = SessionData::<i64>::borrow_from(state);
+
 	// query stuff
-	let user = query!("SELECT u.id FROM poll_user u WHERE u.user_token = $1;", body.user_token)
-		.fetch_one(&*POOL)
-		.await?;
 	let times = query!("SELECT t.time FROM poll_config_time t WHERE t.cfg = $1;", body.poll_cfg)
 		.fetch_all(&*POOL)
 		.await?;
@@ -29,7 +31,7 @@ async fn create(body: NewSubmission) -> Result<NoContent, sqlx::Error> {
 	let id = query!(
 		"INSERT INTO poll_submission(cfg, \"user\") VALUES ($1, $2) RETURNING id;",
 		body.poll_cfg,
-		user.id
+		user_id
 	)
 	.fetch_one(&*POOL)
 	.await?

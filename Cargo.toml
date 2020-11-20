@@ -27,3 +27,6 @@ sha2 = "0.9"
 sqlx = { version = "0.4.1", features = ["runtime-tokio-rustls", "postgres", "macros", "chrono"], default-features = false }
 telegram-bot = { version = "0.7", features = ["rustls"], default-features = false }
 tokio = { version = "0.2", features = ["rt-core"] }
+
+[patch.crates-io]
+gotham_restful_derive = { git = "https://gitlab.com/msrd0/gotham-restful", rev = "ce570c4787c6746b7b61d7d27e9c907ecbd5bf0d" }
