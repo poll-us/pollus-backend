@@ -1,8 +1,5 @@
+use super::{AuthResult, AuthStatus};
 use crate::POOL;
-use gotham::{
-	middleware::session::SessionData,
-	state::{FromState, State}
-};
 use gotham_restful::NoContent;
 use serde::Deserialize;
 use sqlx::query;
@@ -18,8 +15,8 @@ struct NewSubmission {
 }
 
 #[create(SubmissionResource)]
-async fn create(state: &mut State, body: NewSubmission) -> Result<NoContent, sqlx::Error> {
-	let user_id: &i64 = SessionData::<i64>::borrow_from(state);
+async fn create(auth: AuthStatus, body: NewSubmission) -> AuthResult<NoContent> {
+	let user_id = auth.ok()?.sub;
 
 	// query stuff
 	let times = query!("SELECT t.time FROM poll_config_time t WHERE t.cfg = $1;", body.poll_cfg)

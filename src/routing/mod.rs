@@ -1,16 +1,30 @@
+use crate::SECRET;
 use gotham::{
 	hyper::header::CONTENT_TYPE,
-	middleware::{logger::RequestLogger, session::NewSessionMiddleware},
+	middleware::{cookie::CookieParser, logger::RequestLogger},
 	pipeline::{new_pipeline, single::single_pipeline},
 	router::{builder::*, Router}
 };
-use gotham_restful::{CorsConfig, DrawResources, Origin};
+use gotham_restful::{AuthMiddleware, AuthSource, AuthValidation, CorsConfig, DrawResources, Origin, StaticAuthHandler};
 use log::Level;
+use serde::{Deserialize, Serialize};
 
 mod auth;
 mod poll;
 mod profile;
 mod submission;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct AuthData {
+	sub: i64,
+	iat: i64,
+	nbf: i64,
+	exp: i64
+}
+
+type AuthStatus = gotham_restful::AuthStatus<AuthData>;
+
+type AuthResult<T> = gotham_restful::AuthResult<T, sqlx::Error>;
 
 pub(crate) fn router() -> Router {
 	let logger = RequestLogger::new(Level::Info);
@@ -21,9 +35,15 @@ pub(crate) fn router() -> Router {
 		..Default::default()
 	};
 
-	let sessions = NewSessionMiddleware::default().with_session_type::<i64>();
+	let kekse = CookieParser;
 
-	let (chain, pipelines) = single_pipeline(new_pipeline().add(logger).add(cors).add(sessions).build());
+	let auth: AuthMiddleware<AuthData, _> = AuthMiddleware::new(
+		AuthSource::Cookie("pollus_session".to_owned()),
+		AuthValidation::default(),
+		StaticAuthHandler::from_array(SECRET.as_bytes())
+	);
+
+	let (chain, pipelines) = single_pipeline(new_pipeline().add(logger).add(cors).add(kekse).add(auth).build());
 	build_router(chain, pipelines, |route| {
 		route
 			.get("/auth/:token")
