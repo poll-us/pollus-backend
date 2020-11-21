@@ -32,6 +32,7 @@ pub(crate) fn router() -> Router {
 	let cors = CorsConfig {
 		origin: Origin::Copy,
 		headers: vec![CONTENT_TYPE],
+		credentials: true,
 		..Default::default()
 	};
 
