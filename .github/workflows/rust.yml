@@ -17,10 +17,7 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       
-      - uses: actions-rs/install@v0.1.2
-        with:
-          crate: refinery_cli
-          use-tool-cache: true
+      - run: cargo install refinery_cli --features postgresql --no-default-features
       
       - run: refinery migrate -e DATABASE_URL files && cargo test
         env:
