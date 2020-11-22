@@ -49,9 +49,8 @@ async fn create(auth: AuthStatus, body: NewSubmission) -> AuthResult<NoContent> 
 	.fetch_one(&*POOL)
 	.await?
 	.id;
-	// TODO there is a bug with query! that makes this not compile
-	query("INSERT INTO poll_submission_time(submission, cfg, time, value) SELECT $1, $2, UNNEST($3::TIME[]), UNNEST($4::SMALLINT[]);")
-		.bind(id).bind(body.poll_cfg).bind(&times).bind(&body.values).execute(&*POOL).await?;
+	query!("INSERT INTO poll_submission_time(submission, cfg, time, value) SELECT $1, $2, UNNEST($3::TIME[]), UNNEST($4::SMALLINT[]);", id, body.poll_cfg, &times, &body.values)
+		.execute(&*POOL).await?;
 
 	Ok(().into())
 }
@@ -85,15 +84,14 @@ async fn change(auth: AuthStatus, submission: i64, values: Vec<i16>) -> AuthResu
 	let times = times.into_iter().map(|record| record.time).collect::<Vec<_>>();
 
 	// update stuff
-	// TODO there is a bug with query! that makes this not compile
-	query(
+	query!(
 		"UPDATE poll_submission_time AS t SET value = u.value FROM (
 			SELECT UNNEST($1::SMALLINT[]) AS value, UNNEST($2::TIME[]) AS time
-		) AS u WHERE submission = $3 AND t.time = u.time"
+		) AS u WHERE submission = $3 AND t.time = u.time",
+		&values,
+		&times,
+		submission
 	)
-	.bind(&values)
-	.bind(&times)
-	.bind(submission)
 	.execute(&*POOL)
 	.await?;
 
