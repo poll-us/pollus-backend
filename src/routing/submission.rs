@@ -1,4 +1,4 @@
-use super::{AuthResult, AuthStatus};
+use super::{AuthError, AuthResult, AuthStatus};
 use crate::POOL;
 use gotham_restful::NoContent;
 use serde::Deserialize;
@@ -17,6 +17,19 @@ struct NewSubmission {
 #[create(SubmissionResource)]
 async fn create(auth: AuthStatus, body: NewSubmission) -> AuthResult<NoContent> {
 	let user_id = auth.ok()?.sub;
+
+	// only 0, 1 and 2 are allowed
+	if body.values.iter().any(|v| *v > 2 || *v < 0) {
+		return Err(AuthError::InvalidData);
+	}
+
+	// check that the poll config exists
+	let poll_cfg = query!("SELECT id FROM poll_config WHERE id = $1;", body.poll_cfg)
+		.fetch_optional(&*POOL)
+		.await?;
+	if poll_cfg.is_none() {
+		return Err(AuthError::InvalidData);
+	}
 
 	// query stuff
 	let times = query!("SELECT t.time FROM poll_config_time t WHERE t.cfg = $1;", body.poll_cfg)

@@ -1,4 +1,4 @@
-use super::{AuthResult, AuthStatus};
+use super::{AuthError, AuthResult, AuthStatus};
 use crate::POOL;
 use gotham_restful::NoContent;
 use serde::{Deserialize, Serialize};
@@ -41,6 +41,11 @@ async fn read_all(auth: AuthStatus) -> AuthResult<Profile> {
 #[change_all(ProfileResource)]
 async fn change_all(auth: AuthStatus, body: UpdateProfile) -> AuthResult<NoContent> {
 	let user_id = auth.ok()?.sub;
+
+	if body.firstname.len() < 3 {
+		return Err(AuthError::InvalidData);
+	}
+
 	query!(
 		"UPDATE poll_user SET firstname = $1, lastname = $2 WHERE id = $3",
 		body.firstname,

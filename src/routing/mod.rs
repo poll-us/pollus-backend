@@ -24,7 +24,35 @@ struct AuthData {
 
 type AuthStatus = gotham_restful::AuthStatus<AuthData>;
 
-type AuthResult<T> = gotham_restful::AuthResult<T, sqlx::Error>;
+#[derive(Debug, ResourceError)]
+enum AuthError {
+	#[status(FORBIDDEN)]
+	#[display("Forbidden")]
+	Forbidden,
+	#[status(BAD_REQUEST)]
+	#[display("Invalid Data")]
+	InvalidData,
+	#[status(NOT_FOUND)]
+	#[display("Not Found")]
+	NotFound,
+	#[status(INTERNAL_SERVER_ERROR)]
+	#[display("{0}")]
+	DatabaseError(sqlx::Error)
+}
+
+impl From<gotham_restful::AuthError> for AuthError {
+	fn from(_: gotham_restful::AuthError) -> Self {
+		Self::Forbidden
+	}
+}
+
+impl From<sqlx::Error> for AuthError {
+	fn from(err: sqlx::Error) -> Self {
+		Self::DatabaseError(err)
+	}
+}
+
+type AuthResult<T> = Result<T, AuthError>;
 
 pub(crate) fn router() -> Router {
 	let logger = RequestLogger::new(Level::Info);

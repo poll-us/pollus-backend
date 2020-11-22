@@ -1,3 +1,4 @@
+use super::{AuthError, AuthResult};
 use crate::POOL;
 use chrono::{Duration, NaiveDate, NaiveTime};
 use itertools::Itertools;
@@ -35,7 +36,11 @@ struct Poll {
 }
 
 #[read(PollResource)]
-async fn read(id: String) -> Result<Poll, sqlx::Error> {
+async fn read(id: String) -> AuthResult<Poll> {
+	if id.len() < 8 {
+		return Err(AuthError::NotFound);
+	}
+
 	let poll_cfg_times = query!("SELECT c.id, c.date, t.time FROM poll_config c INNER JOIN poll_config_time t ON c.id = t.cfg WHERE c.poll = $1 AND c.date >= now()::DATE - 1;", &id).fetch_all(&*POOL).await?;
 
 	// build existing config
